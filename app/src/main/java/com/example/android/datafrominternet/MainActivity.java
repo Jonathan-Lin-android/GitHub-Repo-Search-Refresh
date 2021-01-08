@@ -15,24 +15,89 @@
  */
 package com.example.android.datafrominternet;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+import com.example.android.datafrominternet.utilities.NetworkUtils;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    // TODO (26) Create an EditText variable called mSearchBoxEditText
-
-    // TODO (27) Create a TextView variable called mUrlDisplayTextView
-    // TODO (28) Create a TextView variable called mSearchResultsTextView
+    EditText mSearchBoxEditText;
+    TextView mUrlDisplayTextView;
+    TextView mSearchResultsTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // TODO (29) Use findViewById to get a reference to mSearchBoxEditText
+        mSearchBoxEditText = (EditText) findViewById(R.id.et_search_box);
+        mUrlDisplayTextView = (TextView) findViewById(R.id.tv_url_display);
+        mSearchResultsTextView = (TextView) findViewById(R.id.tv_github_search_results_json);
+    }
 
-        // TODO (30) Use findViewById to get a reference to mUrlDisplayTextView
-        // TODO (31) Use findViewById to get a reference to mSearchResultsTextView
+    @Override
+    public boolean onCreateOptionsMenu(final Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(final MenuItem item) {
+        super.onOptionsItemSelected(item);
+
+        final int ACTION_SEARCH = R.id.action_search;
+
+        switch(item.getItemId())
+        {
+            case ACTION_SEARCH :
+                makeGithubSearchQuery();
+                return true;
+        }
+        return false;
+    }
+
+    class GithubQueryTask extends AsyncTask<URL, Void, String> implements
+            com.example.android.datafrominternet.GithubQueryTask {
+
+        @Override
+        protected String doInBackground(final URL ... searchUrls) {
+            try {
+                // query results response
+                String jsonResponse = NetworkUtils.getResponseFromHttpUrl(searchUrls[0]);
+                return jsonResponse;
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(final String jsonStr) {
+            mSearchResultsTextView.setText(jsonStr);
+        }
+    }
+
+    private void makeGithubSearchQuery()
+    {
+        String searchQuery = mSearchBoxEditText.getText().toString();
+
+        // build the query url
+        final URL searchUrl = NetworkUtils.buildUrl(searchQuery);
+        mUrlDisplayTextView.setText(searchUrl.toString());
+
+        // query in background thread.
+        new GithubQueryTask().execute(searchUrl);
     }
 }
