@@ -21,7 +21,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.example.android.datafrominternet.utilities.NetworkUtils;
@@ -31,9 +33,11 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    EditText mSearchBoxEditText;
-    TextView mUrlDisplayTextView;
-    TextView mSearchResultsTextView;
+    private EditText mSearchBoxEditText;
+    private TextView mUrlDisplayTextView;
+    private TextView mSearchResultsTextView;
+    private TextView mErrorMessageTextView;
+    private ProgressBar mLoadingIndicatorProgressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
         mSearchBoxEditText = (EditText) findViewById(R.id.et_search_box);
         mUrlDisplayTextView = (TextView) findViewById(R.id.tv_url_display);
         mSearchResultsTextView = (TextView) findViewById(R.id.tv_github_search_results_json);
+        mErrorMessageTextView = (TextView) findViewById(R.id.tv_error_message_display);
+        mLoadingIndicatorProgressBar = (ProgressBar) findViewById(R.id.pb_loading_indicator);
     }
 
     @Override
@@ -71,6 +77,11 @@ public class MainActivity extends AppCompatActivity {
             com.example.android.datafrominternet.GithubQueryTask {
 
         @Override
+        protected void onPreExecute() {
+            mLoadingIndicatorProgressBar.setVisibility(View.VISIBLE);
+        }
+
+        @Override
         protected String doInBackground(final URL ... searchUrls) {
             try {
                 // query results response
@@ -85,7 +96,14 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(final String jsonStr) {
-            mSearchResultsTextView.setText(jsonStr);
+            mLoadingIndicatorProgressBar.setVisibility(View.INVISIBLE);
+
+            if(jsonStr != null && !jsonStr.isEmpty()) {
+                mSearchResultsTextView.setText(jsonStr);
+                showJsonDataView();
+            }
+            else
+                showErrorMessage();
         }
     }
 
@@ -99,5 +117,17 @@ public class MainActivity extends AppCompatActivity {
 
         // query in background thread.
         new GithubQueryTask().execute(searchUrl);
+    }
+
+    private void showJsonDataView()
+    {
+        mSearchResultsTextView.setVisibility(View.VISIBLE);
+        mErrorMessageTextView.setVisibility(View.INVISIBLE);
+    }
+
+    private void showErrorMessage()
+    {
+        mErrorMessageTextView.setVisibility(View.VISIBLE);
+        mSearchResultsTextView.setVisibility(View.INVISIBLE);
     }
 }

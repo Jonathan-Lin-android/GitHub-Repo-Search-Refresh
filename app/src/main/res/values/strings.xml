@@ -16,4 +16,6 @@
 <resources>
     <string name="app_name">Github Query</string>
     <string name="search">Search</string>
+    <string name="default_result_message">Please make a Search</string>
+    <string name="error_message">Failed to get results, please try again.</string>
 </resources>
